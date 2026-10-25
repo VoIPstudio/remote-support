@@ -170,8 +170,12 @@ jobs:
       - name: Build msi
         if: matrix.variant == 'full'
         run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           pushd ./res/msi
-          python preprocess.py --arp -d ../../rustdesk --app-name "$env:APP_NAME" --manufacturer "Level 7 Network Limited"
+          # -v is required: without it preprocess.py asks the exe for its version through an
+          # unquoted shell command, which breaks on the spaces in our exe name.
+          python preprocess.py --arp -d ../../rustdesk -v "$env:VERSION" --app-name "$env:APP_NAME" --manufacturer "Level 7 Network Limited"
           nuget restore msi.sln
           msbuild msi.sln -p:Configuration=Release -p:Platform=x64 /p:TargetVersion=Windows10
           $msi = Get-ChildItem ./Package/bin/*/Release/en-us/Package.msi | Select-Object -First 1
